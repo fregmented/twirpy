@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/fregmented/twirpy/protoc-gen-twirpy/generator"
 	"io/ioutil"
 	"log"
 	"os"
 
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
-	"github.com/verloop/twirpy/protoc-gen-twirpy/generator"
 )
 
 func main() {

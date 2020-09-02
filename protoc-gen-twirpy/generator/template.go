@@ -8,10 +8,11 @@ type TwirpTemplateVariables struct {
 }
 
 type TwirpService struct {
-	ServiceURL string
-	Name       string
-	Comment    string
-	Methods    []*TwirpMethod
+	ServiceURL  string
+	Name        string
+	Comment     string
+	Methods     []*TwirpMethod
+	MethodImpls []*TwirpMethodImpl
 }
 
 type TwirpMethod struct {
@@ -21,6 +22,13 @@ type TwirpMethod struct {
 	Comment     string
 	Input       string
 	Output      string
+}
+
+type TwirpMethodImpl struct {
+	Name       string
+	InputVar   string
+	InputType  string
+	OutputType string
 }
 
 type TwirpImport struct {
@@ -55,6 +63,11 @@ class {{.Name}}Server(TwirpServer):
 				output=_sym_db.GetSymbol("{{.Output}}"),
 			),{{- end }}
 		}
+	
+	{{- range .MethodImpls }}
+	def {{ .Name }}(self, context, {{ .InputVar }}: {{ .InputType }}) -> {{ .OutputType }}:
+		raise NotImplementedError("Stub!")
+	{{- end }}
 
 class {{.Name}}Client(TwirpClient):
 {{range .Methods}}

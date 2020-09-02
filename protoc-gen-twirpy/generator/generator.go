@@ -57,8 +57,14 @@ func GenerateTwirpFile(fd *descriptor.FileDescriptorProto) (*plugin.CodeGenerato
 				Input:       getSymbol(method.GetInputType()),
 				Output:      getSymbol(method.GetOutputType()),
 			}
-
+			twirpMethodImpl := &TwirpMethodImpl{
+				Name:       method.GetName(),
+				InputVar:   "_" + getSymbol(method.GetInputType()),
+				InputType:  getSymbol(method.GetInputType()),
+				OutputType: getSymbol(method.GetOutputType()),
+			}
 			twirpSvc.Methods = append(twirpSvc.Methods, twirpMethod)
+			twirpSvc.MethodImpls = append(twirpSvc.MethodImpls, twirpMethodImpl)
 		}
 		vars.Services = append(vars.Services, twirpSvc)
 	}
