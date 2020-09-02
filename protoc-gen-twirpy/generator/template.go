@@ -57,10 +57,10 @@ class {{.Name}}Server(TwirpServer):
         super().__init__(service=service)
         self._prefix = "/twirp/{{.ServiceURL}}"
         self._endpoints = { {{- range .Methods }}
-            "{{.MethodName}}": Endpoint(
+            "{{.Name}}": Endpoint(
                 service_name="{{.ServiceName}}",
                 name="{{.Name}}",
-                function=getattr(service, "{{.Name}}"),
+                function=getattr(service, "{{.MethodName}}"),
                 input=_sym_db.GetSymbol("{{.Input}}"),
                 output=_sym_db.GetSymbol("{{.Output}}"),
             ),{{- end }}
@@ -75,7 +75,7 @@ class {{.Name}}ServerStub:
 
     {{- range .MethodImpls }}
 
-    def {{ .Name }}(self, context, {{ .InputVar }}: _sym_db.GetSymbol("{{ .InputType }}")) -> _sym_db.GetSymbol("{{ .OutputType }}"):
+    def {{ .Name }}(self, context, {{ .InputVar }}):
         raise NotImplementedError("Stub!")
 
     {{- end }}
