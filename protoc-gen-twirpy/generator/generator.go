@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -54,12 +55,13 @@ func GenerateTwirpFile(fd *descriptor.FileDescriptorProto) (*plugin.CodeGenerato
 				ServiceURL:  svcURL,
 				ServiceName: twirpSvc.Name,
 				Name:        method.GetName(),
+				MethodName:  toSnakeCase(method.GetName()),
 				Input:       getSymbol(method.GetInputType()),
 				Output:      getSymbol(method.GetOutputType()),
 			}
 			twirpMethodImpl := &TwirpMethodImpl{
-				Name:       method.GetName(),
-				InputVar:   "_" + getSymbol(method.GetInputType()),
+				Name:       toSnakeCase(method.GetName()),
+				InputVar:   toSnakeCase(getSymbol(strings.Split(method.GetInputType(), ".")[2])),
 				InputType:  getSymbol(method.GetInputType()),
 				OutputType: getSymbol(method.GetOutputType()),
 			}
@@ -95,4 +97,13 @@ func getFileDescriptor(files []*descriptor.FileDescriptorProto, name string) (*d
 		}
 	}
 	return nil, errors.New("could not find descriptor")
+}
+
+var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
+var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
+
+func toSnakeCase(str string) string {
+	snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
+	snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
+	return strings.ToLower(snake)
 }

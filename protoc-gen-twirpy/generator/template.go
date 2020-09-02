@@ -18,6 +18,7 @@ type TwirpService struct {
 type TwirpMethod struct {
 	ServiceURL  string
 	ServiceName string
+	MethodName  string
 	Name        string
 	Comment     string
 	Input       string
@@ -48,35 +49,46 @@ from twirp.server import TwirpServer
 from twirp.client import TwirpClient
 
 _sym_db = _symbol_database.Default()
+
 {{range .Services}}
 class {{.Name}}Server(TwirpServer):
 
-	def __init__(self, *args, service):
-		super().__init__(service=service)
-		self._prefix = "/twirp/{{.ServiceURL}}"
-		self._endpoints = { {{- range .Methods }}
-			"{{.Name}}": Endpoint(
-				service_name="{{.ServiceName}}",
-				name="{{.Name}}",
-				function=getattr(service, "{{.Name}}"),
-				input=_sym_db.GetSymbol("{{.Input}}"),
-				output=_sym_db.GetSymbol("{{.Output}}"),
-			),{{- end }}
-		}
-	
-	{{- range .MethodImpls }}
-	def {{ .Name }}(self, context, {{ .InputVar }}: {{ .InputType }}) -> {{ .OutputType }}:
-		raise NotImplementedError("Stub!")
-	{{- end }}
+    def __init__(self, *args, service):
+        super().__init__(service=service)
+        self._prefix = "/twirp/{{.ServiceURL}}"
+        self._endpoints = { {{- range .Methods }}
+            "{{.MethodName}}": Endpoint(
+                service_name="{{.ServiceName}}",
+                name="{{.Name}}",
+                function=getattr(service, "{{.Name}}"),
+                input=_sym_db.GetSymbol("{{.Input}}"),
+                output=_sym_db.GetSymbol("{{.Output}}"),
+            ),{{- end }}
+        }
+    
+
+class {{.Name}}ServerStub:
+
+    @classmethod
+    def get_service(cls) -> {{.Name}}Server:
+        return {{.Name}}Server(service=cls())
+
+    {{- range .MethodImpls }}
+
+    def {{ .Name }}(self, context, {{ .InputVar }}: _sym_db.GetSymbol("{{ .InputType }}")) -> _sym_db.GetSymbol("{{ .OutputType }}"):
+        raise NotImplementedError("Stub!")
+
+    {{- end }}
+
 
 class {{.Name}}Client(TwirpClient):
 {{range .Methods}}
-	def {{.Name}}(self, *args, ctx, request, **kwargs):
-		return self._make_request(
-			url="/twirp/{{.ServiceURL}}/{{.Name}}",
-			ctx=ctx,
-			request=request,
-			response_obj=_sym_db.GetSymbol("{{.Output}}"),
-			**kwargs,
-		)
+    def {{.MethodName}}(self, *args, ctx, request, **kwargs):
+        return self._make_request(
+            url="/twirp/{{.ServiceURL}}/{{.Name}}",
+            ctx=ctx,
+            request=request,
+            response_obj=_sym_db.GetSymbol("{{.Output}}"),
+            **kwargs,
+        )
 {{end}}{{end}}`))
